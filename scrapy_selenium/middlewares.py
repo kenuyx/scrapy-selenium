@@ -2,6 +2,7 @@
 
 from importlib import import_module
 
+import time
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from scrapy.http import HtmlResponse
@@ -89,6 +90,29 @@ class SeleniumMiddleware:
             WebDriverWait(self.driver, request.wait_time).until(
                 request.wait_until
             )
+            
+        self.driver.execute_script("""
+function scrollToBottom() {
+    var Height = document.body.clientHeight,  //文本高度
+        screenHeight = window.innerHeight,  //屏幕高度
+        INTERVAL = 100,  // 滚动动作之间的间隔时间
+        delta = 500,  //每次滚动距离
+        curScrollTop = 0;    //当前window.scrollTop 值
+    var scroll = function () {
+        curScrollTop = document.body.scrollTop;
+        window.scrollTo(0,curScrollTop + delta);
+    };
+    var timer = setInterval(function () {
+        var curHeight = curScrollTop + screenHeight;
+        if (curHeight >= Height){   //滚动到页面底部时，结束滚动
+            clearInterval(timer);
+        }
+        scroll();
+    }, INTERVAL);
+}
+scrollToBottom();
+""")   
+        time.sleep(10)
 
         if request.screenshot:
             request.meta['screenshot'] = self.driver.get_screenshot_as_png()
